@@ -1,98 +1,141 @@
 package com.example.cafeglasspoc
 
-import android.content.Context
 import android.app.Presentation
+import android.content.Context
+import android.graphics.Color
 import android.os.Bundle
 import android.view.Display
+import android.view.GestureDetector
+import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.WindowManager
 import android.widget.TextView
+import kotlin.math.abs
 
-class GlassPresentation(context: Context, display: Display) : Presentation(context, display) {
+class GlassPresentation(
+    context: Context,
+    display: Display,
+    private val onNext: () -> Unit,
+    private val onPrev: () -> Unit
+) : Presentation(context, display) {
 
-    private lateinit var tvTitle: TextView
-    private lateinit var tvStep1: TextView
-    private lateinit var tvStep2: TextView
-    private lateinit var tvStep3: TextView
+    private val steps = listOf(
+        "1/3 Royal Tea sachet\nin hot water — 50 sec",
+        "Chai powder:\n5 taps",
+        "150 ml\nhot milk"
+    )
+    private var pendingStep: Int = 0
 
-    // Rush mode views
-    private lateinit var tvRushTitle: TextView
-    private lateinit var tvRushOrders: TextView
+    private var tvTitle: TextView? = null
+    private var tvStep1: TextView? = null
+    private var tvStep2: TextView? = null
+    private var tvStep3: TextView? = null
 
-    private lateinit var recipeContainer: android.view.View
-    private lateinit var rushContainer: android.view.View
+    // Gesture detector for touchpad swipes
+    private lateinit var gestureDetector: GestureDetector
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Force fullscreen black background
-        window?.apply {
-            addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-            addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
-        }
+        window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         setContentView(R.layout.presentation_glass)
 
-        recipeContainer = findViewById(R.id.recipeContainer)
-        rushContainer   = findViewById(R.id.rushContainer)
+        tvTitle = findViewById(R.id.tvTitle)
+        tvStep1 = findViewById(R.id.tvStep1)
+        tvStep2 = findViewById(R.id.tvStep2)
+        tvStep3 = findViewById(R.id.tvStep3)
 
-        tvTitle   = findViewById(R.id.tvTitle)
-        tvStep1   = findViewById(R.id.tvStep1)
-        tvStep2   = findViewById(R.id.tvStep2)
-        tvStep3   = findViewById(R.id.tvStep3)
+        // Swipe gesture: left = next, right = prev
+        gestureDetector = GestureDetector(context,
+            object : GestureDetector.SimpleOnGestureListener() {
 
-        tvRushTitle  = findViewById(R.id.tvRushTitle)
-        tvRushOrders = findViewById(R.id.tvRushOrders)
+                private val SWIPE_MIN_DISTANCE = 50
+                private val SWIPE_MIN_VELOCITY = 100
+
+                override fun onFling(
+                    e1: MotionEvent?,
+                    e2: MotionEvent,
+                    velocityX: Float,
+                    velocityY: Float
+                ): Boolean {
+                    val deltaX = (e2.x - (e1?.x ?: e2.x))
+                    val deltaY = (e2.y - (e1?.y ?: e2.y))
+
+                    // Horizontal swipe dominates
+                    if (abs(deltaX) > abs(deltaY)) {
+                        if (deltaX < -SWIPE_MIN_DISTANCE &&
+                            abs(velocityX) > SWIPE_MIN_VELOCITY) {
+                            onNext() // swipe left = next
+                            return true
+                        } else if (deltaX > SWIPE_MIN_DISTANCE &&
+                            abs(velocityX) > SWIPE_MIN_VELOCITY) {
+                            onPrev() // swipe right = prev/reset
+                            return true
+                        }
+                    }
+                    return false
+                }
+
+                // Single tap also advances
+                override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
+                    onNext()
+                    return true
+                }
+            })
+
+        renderStep(pendingStep)
     }
 
-    /**
-     * Renders the recipe with the active step highlighted in cyan,
-     * and future/past steps in dimmed magenta.
-     */
-    fun showRecipeStep(steps: List<String>, activeIndex: Int) {
-        recipeContainer.visibility = android.view.View.VISIBLE
-        rushContainer.visibility   = android.view.View.GONE
+    // Route ALL touch events through the gesture detector
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        gestureDetector.onTouchEvent(ev)
+        return super.dispatchTouchEvent(ev)
+    }
 
-        tvTitle.text = "[ APPRENTICE MODE : CHAI MILK TEA (S) ]"
-
-        val stepViews = listOf(tvStep1, tvStep2, tvStep3)
-        val labels    = listOf("STEP 1", "STEP 2", "STEP 3")
-
-        stepViews.forEachIndexed { index, tv ->
-            if (index < steps.size) {
-                tv.text = "▶  ${labels[index]}\n${steps[index]}"
-                if (index == activeIndex) {
-                    // Active step: bright cyan, larger
-                    tv.setTextColor(android.graphics.Color.parseColor("#00FFCC"))
-                    tv.alpha     = 1f
-                    tv.textSize  = 32f
-                } else {
-                    // Inactive: dimmed magenta
-                    tv.setTextColor(android.graphics.Color.parseColor("#FF3366"))
-                    tv.alpha     = 0.45f
-                    tv.textSize  = 24f
+    // Also catch hardware key events from the glasses touchpad
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.action == KeyEvent.ACTION_DOWN) {
+            when (event.keyCode) {
+                KeyEvent.KEYCODE_DPAD_RIGHT,
+                KeyEvent.KEYCODE_DPAD_CENTER,
+                KeyEvent.KEYCODE_ENTER,
+                KeyEvent.KEYCODE_BUTTON_R1 -> {
+                    onNext()
+                    return true
                 }
-            } else {
-                tv.text = ""
+                KeyEvent.KEYCODE_DPAD_LEFT,
+                KeyEvent.KEYCODE_BACK -> {
+                    onPrev()
+                    return true
+                }
             }
         }
+        return super.dispatchKeyEvent(event)
     }
 
-    /**
-     * Switches the glass display to Rush Mode with a list of pending orders.
-     */
-    fun showRushMode() {
-        recipeContainer.visibility = android.view.View.GONE
-        rushContainer.visibility   = android.view.View.VISIBLE
+    fun showRecipeStep(activeIndex: Int) {
+        pendingStep = activeIndex
+        if (tvStep1 != null) renderStep(activeIndex)
+    }
 
-        tvRushTitle.text = "⚡  RUSH MODE  ⚡"
-        tvRushOrders.text = """
-            ☕  1x  Espresso
-            
-            🍵  2x  Matcha Latte
-            
-            🧋  1x  Chai Milk Tea (S)
-            
-            ☕  1x  Americano
-        """.trimIndent()
+    private fun renderStep(activeIndex: Int) {
+        tvTitle?.text = "[ APPRENTICE : CHAI MILK TEA (S) ]"
+
+        val stepViews = listOf(tvStep1, tvStep2, tvStep3)
+        val labels    = listOf("STEP 1 ▶", "STEP 2 ▶", "STEP 3 ▶")
+
+        stepViews.forEachIndexed { index, tv ->
+            tv?.text = "${labels[index]}\n${steps[index]}"
+            if (index == activeIndex) {
+                tv?.setTextColor(Color.parseColor("#00FFCC"))
+                tv?.alpha    = 1f
+                tv?.textSize = 32f
+            } else {
+                tv?.setTextColor(Color.parseColor("#FF3366"))
+                tv?.alpha    = 0.4f
+                tv?.textSize = 22f
+            }
+        }
     }
 }
