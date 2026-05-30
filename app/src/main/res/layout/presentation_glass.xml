@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
+
+    <!-- ═══════════════════════════════ RECIPE MODE ═════════════════════════ -->
+    <LinearLayout
+        android:id="@+id/recipeContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center_vertical"
+        android:padding="48dp">
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="[ APPRENTICE MODE : CHAI MILK TEA (S) ]"
+            android:textColor="#FFFFFF"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.1"
+            android:layout_marginBottom="40dp"/>
+
+        <!-- Step 1 -->
+        <TextView
+            android:id="@+id/tvStep1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="32sp"
+            android:fontFamily="monospace"
+            android:lineSpacingMultiplier="1.3"
+            android:layout_marginBottom="28dp"/>
+
+        <!-- Step 2 -->
+        <TextView
+            android:id="@+id/tvStep2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="24sp"
+            android:fontFamily="monospace"
+            android:lineSpacingMultiplier="1.3"
+            android:layout_marginBottom="28dp"/>
+
+        <!-- Step 3 -->
+        <TextView
+            android:id="@+id/tvStep3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="24sp"
+            android:fontFamily="monospace"
+            android:lineSpacingMultiplier="1.3"/>
+
+    </LinearLayout>
+
+    <!-- ═══════════════════════════════ RUSH MODE ═══════════════════════════ -->
+    <LinearLayout
+        android:id="@+id/rushContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="48dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tvRushTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⚡  RUSH MODE  ⚡"
+            android:textColor="#FF3366"
+            android:textSize="42sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.15"
+            android:layout_marginBottom="40dp"/>
+
+        <TextView
+            android:id="@+id/tvRushOrders"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#00FFCC"
+            android:textSize="34sp"
+            android:fontFamily="monospace"
+            android:lineSpacingMultiplier="1.5"/>
+
+    </LinearLayout>
+
+</FrameLayout>
