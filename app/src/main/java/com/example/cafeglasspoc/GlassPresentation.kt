@@ -5,12 +5,9 @@ import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
 import android.view.Display
-import android.view.GestureDetector
 import android.view.KeyEvent
-import android.view.MotionEvent
 import android.view.WindowManager
 import android.widget.TextView
-import kotlin.math.abs
 
 class GlassPresentation(
     context: Context,
@@ -31,14 +28,10 @@ class GlassPresentation(
     private var tvStep2: TextView? = null
     private var tvStep3: TextView? = null
 
-    // Gesture detector for touchpad swipes
-    private lateinit var gestureDetector: GestureDetector
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-
         setContentView(R.layout.presentation_glass)
 
         tvTitle = findViewById(R.id.tvTitle)
@@ -46,61 +39,27 @@ class GlassPresentation(
         tvStep2 = findViewById(R.id.tvStep2)
         tvStep3 = findViewById(R.id.tvStep3)
 
-        // Swipe gesture: left = next, right = prev
-        gestureDetector = GestureDetector(context,
-            object : GestureDetector.SimpleOnGestureListener() {
-
-                private val SWIPE_MIN_DISTANCE = 50
-                private val SWIPE_MIN_VELOCITY = 100
-
-                override fun onFling(
-                    e1: MotionEvent?,
-                    e2: MotionEvent,
-                    velocityX: Float,
-                    velocityY: Float
-                ): Boolean {
-                    val deltaX = (e2.x - (e1?.x ?: e2.x))
-                    val deltaY = (e2.y - (e1?.y ?: e2.y))
-
-                    // Horizontal swipe dominates
-                    if (abs(deltaX) > abs(deltaY)) {
-                        if (deltaX < -SWIPE_MIN_DISTANCE &&
-                            abs(velocityX) > SWIPE_MIN_VELOCITY) {
-                            onNext() // swipe left = next
-                            return true
-                        } else if (deltaX > SWIPE_MIN_DISTANCE &&
-                            abs(velocityX) > SWIPE_MIN_VELOCITY) {
-                            onPrev() // swipe right = prev/reset
-                            return true
-                        }
-                    }
-                    return false
-                }
-
-                // Single tap also advances
-                override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
-                    onNext()
-                    return true
-                }
-            })
-
-        renderStep(pendingStep)
+        // Post to ensure the window is fully attached before rendering
+        window?.decorView?.post {
+            renderStep(pendingStep)
+        }
     }
 
-    // Route ALL touch events through the gesture detector
-    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
-        gestureDetector.onTouchEvent(ev)
-        return super.dispatchTouchEvent(ev)
+    fun showRecipeStep(activeIndex: Int) {
+        pendingStep = activeIndex
+        // Post so we never call renderStep on a not-yet-attached window
+        window?.decorView?.post {
+            if (tvStep1 != null) renderStep(activeIndex)
+        }
     }
 
-    // Also catch hardware key events from the glasses touchpad
+    // Glasses touchpad → D-pad key events (OS translates automatically)
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (event.action == KeyEvent.ACTION_DOWN) {
             when (event.keyCode) {
                 KeyEvent.KEYCODE_DPAD_RIGHT,
                 KeyEvent.KEYCODE_DPAD_CENTER,
-                KeyEvent.KEYCODE_ENTER,
-                KeyEvent.KEYCODE_BUTTON_R1 -> {
+                KeyEvent.KEYCODE_ENTER -> {
                     onNext()
                     return true
                 }
@@ -112,11 +71,6 @@ class GlassPresentation(
             }
         }
         return super.dispatchKeyEvent(event)
-    }
-
-    fun showRecipeStep(activeIndex: Int) {
-        pendingStep = activeIndex
-        if (tvStep1 != null) renderStep(activeIndex)
     }
 
     private fun renderStep(activeIndex: Int) {
