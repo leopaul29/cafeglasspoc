@@ -1,0 +1,34 @@
+# Built objects and bytecode
+*.class
+*.dex
+*.apk
+*.ap_
+*.aab
+
+# Android Studio / IntelliJ IDEA configuration
+.idea/
+*.iml
+*.iws
+.gradle/
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Build outputs
+build/
+app/build/
+
+# Log files
+*.log
+
+# OS-specific hidden files
+.DS_Store
+Thumbs.db
+
+# NDK / native build files (if any)
+obj/
+libs/
+
+# Device/emulator temporary backups
+*.bak
