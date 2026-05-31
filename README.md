@@ -1,11 +1,23 @@
 # Rokid Barista POC
 > AR-assisted recipe guidance for baristas — displayed directly on Rokid smart glasses.
 
+<img width="1920" height="1088" alt="HjIBnEXBc63oyeeKCywzk" src="https://github.com/user-attachments/assets/93805656-07f7-4402-aba7-c2727c661c25" />
+
 A native Android app that turns Rokid AR glasses into a hands-free recipe assistant. The barista sees step-by-step instructions overlaid in their field of view while keeping both hands free to work. Steps advance with a single tap on the glasses touchpad.
 
-## Demo
+## Context
+Built in one day at the CreatorLab × Trae Solo Hackathon (Tokyo, 2025).
 
-_[Add link to demo video here]_
+Working part-time in a Japanese café taught me that the hardest part 
+isn't the coffee — it's the menu. Dozens of recipes, in Japanese, 
+on your first shift as a foreign student.
+
+BaristaVision is a hands-free AR co-pilot for café workers, built on 
+Rokid AI Glasses. Two modes:
+- 🎓 Apprentice Mode — step-by-step recipe overlays, navigated via temple gestures
+- ⚡ Rush Mode — live order-queue HUD (roadmap)
+
+⚠️ Hackathon prototype — expect rough edges. Reach out to collaborate.
 
 ## How It Works
 
@@ -15,6 +27,13 @@ _[Add link to demo video here]_
 4. The RESET button returns to step 1
 
 The black background renders as fully transparent on the Rokid glasses, making the text appear floating in the real world.
+
+## Roadmap
+- [x] Apprentice Mode — recipe overlay with gesture navigation
+- [ ] Rush Mode — live order-queue HUD via POS integration
+- [ ] Multi-language support (EN / JA / ZH)
+- [ ] Voice command to call a specific recipe by name
+- [ ] Wireless connection (remove USB-C dependency)
 
 ## Architecture
 
@@ -40,7 +59,7 @@ No backend. No cloud. No dependencies beyond the Android SDK.
 **Run**
 ```bash
 # Clone the repo
-git clone https://github.com/[your-username]/rokid-barista-poc
+git clone https://github.com/leopaul29/cafeglasspoc
 
 # Open in Android Studio, then:
 ./gradlew installDebug
